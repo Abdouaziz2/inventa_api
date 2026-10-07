@@ -1,0 +1,51 @@
+{
+  "name": "inventa-api",
+  "version": "1.0.0",
+  "description": "Backend API modulaire et scalable pour Inventa (Gems Flow Suite)",
+  "author": "Bayecode Tech",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f api",
+    "docker:build": "docker compose build"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/config": "^3.3.0",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "@nestjs/schedule": "^4.1.2",
+    "@nestjs/swagger": "^8.1.1",
+    "@nestjs/throttler": "^6.3.0",
+    "@prisma/client": "^6.4.1",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "helmet": "^8.0.0",
+    "nodemailer": "^6.10.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.4.9",
+    "@nestjs/schematics": "^10.2.3",
+    "@types/express": "^5.0.0",
+    "@types/node": "^20.17.19",
+    "@types/nodemailer": "^6.4.17",
+    "prisma": "^6.4.1",
+    "source-map-support": "^0.5.21",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}

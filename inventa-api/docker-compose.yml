@@ -1,0 +1,63 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inventa-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://inventa_user:inventa_secret_password@postgres:5432/inventa_db?schema=public
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=http://localhost:5173,http://localhost:3000,https://inventa.bayecode.com
+      - JWT_SECRET=super_secret_local_jwt_key_inventa_2026
+      - WAVE_MERCHANT_BASE_URL=https://pay.wave.com/m/M_sn_rcEoxhsoOgeM/c/sn/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - inventa-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: inventa-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=inventa_user
+      - POSTGRES_PASSWORD=inventa_secret_password
+      - POSTGRES_DB=inventa_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventa_user -d inventa_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - inventa-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: inventa-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - inventa-network
+
+networks:
+  inventa-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

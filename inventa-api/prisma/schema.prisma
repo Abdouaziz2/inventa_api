@@ -1,0 +1,153 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  JEWELLER
+  MANAGER
+  STAFF
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  WAVE
+  ORANGE_MONEY
+  BANK_TRANSFER
+  OTHER
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  fullName     String?       @map("full_name")
+  phone        String?
+  businessName String?       @map("business_name")
+  role         Role          @default(JEWELLER)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  subscription Subscription?
+  sales        Sale[]
+  reminders    PaymentReminder[]
+
+  @@map("users")
+}
+
+model Subscription {
+  id           String             @id @default(uuid())
+  userId       String             @unique @map("user_id")
+  planCode     String             @default("business") @map("plan_code")
+  status       SubscriptionStatus @default(TRIAL)
+  amount       Float              @default(11500)
+  trialEndsAt  DateTime?          @map("trial_ends_at")
+  expiresAt    DateTime?          @map("expires_at")
+  lastPaidAt   DateTime?          @map("last_paid_at")
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model PaymentReminder {
+  id           String    @id @default(uuid())
+  userId       String    @map("user_id")
+  channel      String    @default("whatsapp") // "email" | "whatsapp"
+  targetPhone  String?   @map("target_phone")
+  targetEmail  String?   @map("target_email")
+  amount       Float     @default(11500)
+  status       String    @default("sent") // "sent" | "failed" | "delivered"
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payment_reminders")
+}
+
+model JewelleryItem {
+  id           String        @id @default(uuid())
+  name         String
+  sku          String?       @unique
+  category     String        @default("bague") // bague, collier, bracelet, boucle_oreille...
+  metalType    String        @default("or")    // or, argent, platine...
+  karat        Int           @default(18)      // 18k, 21k, 22k, 24k
+  weightGrams  Float         @default(0)       @map("weight_grams")
+  priceSell    Float         @default(0) @map("price_sell")
+  priceBuy     Float?        @map("price_buy")
+  stockQty     Int           @default(1)       @map("stock_qty")
+  imageUrl     String?       @map("image_url")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  saleItems    SaleItem[]
+
+  @@map("jewellery_items")
+}
+
+model Customer {
+  id              String   @id @default(uuid())
+  fullName        String   @map("full_name")
+  phone           String   @unique
+  email           String?
+  city            String?  @default("Dakar")
+  category        String   @default("particulier") // "particulier" | "vip" | "revendeur"
+  notes           String?
+  totalSpent      Float    @default(0) @map("total_spent")
+  purchasesCount  Int      @default(0) @map("purchases_count")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  sales           Sale[]
+
+  @@map("customers")
+}
+
+model Sale {
+  id            String        @id @default(uuid())
+  userId        String        @map("user_id")
+  customerId    String?       @map("customer_id")
+  customerName  String?       @map("customer_name")
+  customerPhone String?       @map("customer_phone")
+  totalAmount   Float         @map("total_amount")
+  discount      Float         @default(0)
+  paymentMethod PaymentMethod @default(CASH) @map("payment_method")
+  receiptNumber String        @unique @map("receipt_number")
+  notes         String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  user          User          @relation(fields: [userId], references: [id])
+  customer      Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items         SaleItem[]
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id          String        @id @default(uuid())
+  saleId      String        @map("sale_id")
+  itemId      String?       @map("item_id")
+  description String
+  quantity    Int           @default(1)
+  unitPrice   Float         @map("unit_price")
+  totalPrice  Float         @map("total_price")
+
+  sale        Sale          @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  item        JewelleryItem? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@map("sale_items")
+}
